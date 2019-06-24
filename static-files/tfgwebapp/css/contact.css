@@ -1,0 +1,38 @@
+.siddebar{
+  border-left: 1px solid #cccccc;
+}
+
+.section-title{
+  margin-top:0;
+  font-size: 3rem;
+}
+
+.section-content{
+  margin-top:0;
+  font-size: 1.25rem;
+}
+
+#left-part{
+  padding-bottom: 1rem;
+  font-size: 1rem;
+}
+
+#left-part #info ul{
+  margin-top: 6rem;
+  padding-left: 1.5rem;
+}
+
+#rigth-part #contactSocial ul{
+  margin-top: 3rem;
+}
+
+#rigth-part #contactSocial ul li{
+
+  margin-bottom: 3rem;
+    font-size: 2.5rem;
+    padding-left: 1.5rem;
+}
+
+#rigth-part #contactSocial ul li a{
+    font-size: 20px;
+}

@@ -14,7 +14,7 @@ import psycopg2
 
 
 def database_check():
-    dbname = os.environ.get('POSTGRES_DB')
+    dbname = os.environ.get('DJANGO_DB')
     user = os.environ.get('POSTGRES_USER')
     password = os.environ.get('POSTGRES_PASSWORD')
     host = os.environ.get('POSTGRES_HOST')

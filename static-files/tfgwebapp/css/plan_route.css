@@ -1,0 +1,167 @@
+/*******header********/
+
+ .masthead{
+  /*height: 2.43rem;*/
+} 
+
+.navbar-brand{
+  margin-right: 3rem;
+  font-size: 1.25rem;
+  padding-top: .3125rem;
+  padding-bottom: .3125rem;
+}
+
+/********main content*******/
+
+/* General */
+.main-content{
+  margin:0!important; 
+  padding: 0!important;
+}
+
+.container-fluid{
+  height: 100%;
+}
+
+.row {
+  height: 100%;
+}
+
+
+
+/* Left part */
+
+#left-plan{
+  /*background-color: rgb(77, 126, 126);*/
+  margin:0; 
+  padding: 1rem 0.5rem 1rem 0.2rem;
+  text-align: center;
+  position: absolute;
+  right: 0;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.tab-content{
+  padding-top: 2%;
+  overflow-y: auto;
+}
+
+.buttons-content{
+  margin-top:auto;
+  border: 1px solid;
+}
+
+ .buttons-content ul{
+  justify-content: space-between;
+}
+
+/* Table of parameters*/
+#table-parameters{
+  color: white;
+  width:100%;
+}
+
+#table-parameters input{
+  width: 100%;
+}
+
+#table-parameters td{
+  padding:0.5%;
+}
+/* END Left part */
+
+
+
+/* Right part */
+
+
+#right-plan{
+  /* background-color: rgb(202, 235, 157); */
+  margin:0!important; 
+  padding: 0!important;
+}
+
+/* END Right part */
+
+/* Map*/
+
+#map{
+  height: 100%;
+}
+
+.map-overlay {
+  font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+  position: absolute;
+  width: 25%;
+  top: 0;
+  left: 0;
+  padding: 10px;
+}
+
+.map-overlay .map-overlay-inner {
+  border-radius: 3px;
+  padding: 10px;
+}
+
+.map-overlay-inner fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0;
+}
+
+.map-overlay-inner fieldset:last-child {
+  margin: 0;
+}
+
+.map-overlay-inner select {
+  width: 100%;
+}
+
+.map-overlay-inner label {
+  display: block;
+  font-weight: bold;
+  margin: 0 0 5px;
+}
+
+.map-overlay-inner button {
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  border: none;
+  cursor: pointer;
+}
+
+.map-overlay-inner button:focus {
+  outline: none;
+}
+
+.map-overlay-inner button:hover {
+  box-shadow:inset 0 0 0 3px rgba(0, 0, 0, 0.10);
+}
+
+a.mylocation-logo {
+  background-image: url(../img/my_location_200_200.png);
+  width: 2.5rem;
+  height: 2.5rem;
+  background-size: 100% 100%;
+  margin: 0 0 -3px -3px;
+  display: block;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+/* END Map */
+
+
+
+/*footer*/
+
+.footer {
+  padding-bottom: 0!important;
+  padding-top: 0!important;
+  background-color: #111;
+}
+
+

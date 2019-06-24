@@ -33,8 +33,8 @@ else
     #
     # This will give some errors when there is no database to be flushed, but
     # you can ignore these messages.
-    echo "==> Django setup, executing: flush"
-    python3 /srv/${DJANGO_PROJECT_NAME}/manage.py flush --noinput
+    #echo "==> Django setup, executing: flush"
+    #python3 /srv/${DJANGO_PROJECT_NAME}/manage.py flush --noinput
 
     # Django: migrate
     #
