@@ -1,10 +1,10 @@
 /*******header********/
 
- .masthead{
+.masthead {
   /*height: 2.43rem;*/
-} 
+}
 
-.navbar-brand{
+.navbar-brand {
   margin-right: 3rem;
   font-size: 1.25rem;
   padding-top: .3125rem;
@@ -14,12 +14,13 @@
 /********main content*******/
 
 /* General */
-.main-content{
-  margin:0!important; 
+
+.main-content {
+  margin: 0!important;
   padding: 0!important;
 }
 
-.container-fluid{
+.container-fluid {
   height: 100%;
 }
 
@@ -27,13 +28,11 @@
   height: 100%;
 }
 
-
-
 /* Left part */
 
-#left-plan{
+#left-plan {
   /*background-color: rgb(77, 126, 126);*/
-  margin:0; 
+  margin: 0;
   padding: 1rem 0.5rem 1rem 0.2rem;
   text-align: center;
   position: absolute;
@@ -44,43 +43,49 @@
   flex-direction: column;
 }
 
-.tab-content{
+.tab-content {
   padding-top: 2%;
   overflow-y: auto;
 }
 
-.buttons-content{
-  margin-top:auto;
+.buttons-content {
+  margin-top: auto;
   border: 1px solid;
 }
 
- .buttons-content ul{
+.buttons-content ul {
   justify-content: space-between;
 }
 
 /* Table of parameters*/
-#table-parameters{
-  color: white;
-  width:100%;
-}
 
-#table-parameters input{
+#table-parameters {
+  color: white;
   width: 100%;
 }
 
-#table-parameters td{
-  padding:0.5%;
+#table-parameters input {
+  width: 100%;
 }
+
+#table-parameters td {
+  padding: 0.5%;
+}
+
+#table-parameters tr.selected {
+  background-color: #e92929 !important;
+  color: #fff;
+  vertical-align: middle;
+  padding: 1.5em;
+}
+
 /* END Left part */
-
-
 
 /* Right part */
 
-
-#right-plan{
+#right-plan {
   /* background-color: rgb(202, 235, 157); */
-  margin:0!important; 
+  margin: 0!important;
   padding: 0!important;
 }
 
@@ -88,7 +93,7 @@
 
 /* Map*/
 
-#map{
+#map {
   height: 100%;
 }
 
@@ -139,7 +144,7 @@
 }
 
 .map-overlay-inner button:hover {
-  box-shadow:inset 0 0 0 3px rgba(0, 0, 0, 0.10);
+  box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.10);
 }
 
 a.mylocation-logo {
@@ -152,9 +157,14 @@ a.mylocation-logo {
   background-repeat: no-repeat;
   cursor: pointer;
 }
+
+.mapboxgl-popup-content {
+  color: black;
+  max-width: 400px;
+  font: 8px/14px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+}
+
 /* END Map */
-
-
 
 /*footer*/
 
@@ -163,5 +173,3 @@ a.mylocation-logo {
   padding-top: 0!important;
   background-color: #111;
 }
-
-

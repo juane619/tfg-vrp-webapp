@@ -35,6 +35,11 @@ $(document).on('focus click', '#left-plan', function (e) {
     }
 });
 
+$("#table-parameters tr").click(function () {
+    $('.selected').removeClass('selected');
+    $(this).addClass("selected");
+});
+
 function countFilledAddresses(current, last, targetId) {
     var nrows = $("#table-parameters tbody tr").length;
 

@@ -65,7 +65,9 @@ map.on('load', function () {
         var pointFeatures = map.queryRenderedFeatures(e.point, { layers: ['node-points'] });
 
         if (pointFeatures.length) {
-            console.log("-------> FEature clicked!");
+            console.log("-------> FEature clicked!" + pointFeatures[0].layer.paint['circle-radius'])
+            pointFeatures[0].layer.paint['circle-radius'] = 25;
+            console.log("-------> FEature clicked!" + pointFeatures[0].layer.paint['circle-radius'])
         } else {
             mapboxClient.geocoding.reverseGeocode({
                 query: [e.lngLat.lng, e.lngLat.lat],
@@ -86,7 +88,8 @@ map.on('load', function () {
                             },
                             "properties": {
                                 "id": String(new Date().getTime()),
-                                "direction": match.features[0].place_name
+                                "direction": match.features[0].place_name,
+                                "table-position": filledAdresses + 1
                             }
                         };
 
@@ -103,6 +106,60 @@ map.on('load', function () {
         }
 
 
+    });
+
+    // Create a popup, but don't add it to the map yet.
+    var popup = new mapboxgl.Popup({
+        closeButton: false,
+        closeOnClick: false
+    });
+
+    // When a click event occurs on a feature in the places layer, open a popup at the
+    // location of the feature, with description HTML from its properties.
+    map.on('click', 'node-points', function (e) {
+        var coordinates = e.features[0].geometry.coordinates.slice();
+        var tablePosition = e.features[0].properties['table-position'];
+
+        // Ensure that if the map is zoomed out such that multiple
+        // copies of the feature are visible, the popup appears
+        // over the copy being pointed to.
+        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+        }
+
+        popup.setLngLat(coordinates)
+            .setHTML("table-position: " + tablePosition)
+            .addTo(map);
+
+        $('#table-parameters > tbody > tr:nth-child(' + tablePosition + ')').addClass("selected");
+
+    });
+
+    // When a click event occurs on a feature in the places layer, open a popup at the
+    // location of the feature, with description HTML from its properties.
+    map.on('mouseenter', 'node-points', function (e) {
+        var coordinates = e.features[0].geometry.coordinates.slice();
+        var tablePosition = e.features[0].properties['table-position'];
+
+        // Ensure that if the map is zoomed out such that multiple
+        // copies of the feature are visible, the popup appears
+        // over the copy being pointed to.
+        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+        }
+
+        popup.setLngLat(coordinates)
+            .setHTML("table-position: " + tablePosition)
+            .addTo(map);
+
+        $('#table-parameters > tbody > tr:nth-child(' + tablePosition + ')').addClass("selected");
+
+    });
+
+    map.on('mouseleave', 'node-points', function () {
+        map.getCanvas().style.cursor = '';
+        popup.remove();
+        $('#table-parameters > tbody .selected').removeClass("selected");
     });
 
     map.on('mousemove', function (e) {
