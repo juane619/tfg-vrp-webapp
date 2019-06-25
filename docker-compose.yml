@@ -4,13 +4,14 @@
 # For documentation see: https://docs.docker.com/compose/yml/
 #####
 
-version: "3"
+version: "2"
 
 services:
     tfg-db:
       image: postgres:11.1
       volumes:
         - postgres:/pgdata
+        - ./config/init-scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
       env_file:
         - ./config/environment/development.env
       ports:
