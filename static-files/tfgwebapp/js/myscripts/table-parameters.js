@@ -102,26 +102,30 @@ $('#nextTabButton').click(function (e) {
     });
 
     // Obtenemos mediante llamada a la API Mapbox la matriz de distancias entre los nodos elegidos
-    mapboxClient.matrix.getMatrix(myPoints)
-        .send()
-        .then(response => {
-            const matrix = response.body; //MAtriz de distancias
-            console.log(matrix);
+    if (myPoints.points.length > 2) {
+        mapboxClient.matrix.getMatrix(myPoints)
+            .send()
+            .then(response => {
+                const matrix = response.body; //MAtriz de distancias
+                console.log(matrix);
 
-            // Una vez tenemos la matriz de distancias, la enviamos al servidor para crear el archivo de entrada al algoritmo
-            // (enviamos csrf token de seguridad obtenida de la cookie)
-            $.ajax({
-                type: "POST",
-                headers: { "X-CSRFToken": getCookie("csrftoken") },
-                url: 'nodes-data',
-                data: {
-                    'distance_matrix': JSON.stringify(matrix.distances)
-                },
-                success: function (response, data) {
-                    console.log('Enviado correctamente: ' + response);
-                }
+                // Una vez tenemos la matriz de distancias, la enviamos al servidor para crear el archivo de entrada al algoritmo
+                // (enviamos csrf token de seguridad obtenida de la cookie)
+                $.ajax({
+                    type: "POST",
+                    headers: { "X-CSRFToken": getCookie("csrftoken") },
+                    url: 'nodes-data',
+                    data: {
+                        'distance_matrix': JSON.stringify(matrix.distances)
+                    },
+                    success: function (response, data) {
+                        console.log('Enviado correctamente: ' + response);
+                    }
+                });
             });
-        });
+    } else {
+        console.error("Must specify three or more points!")
+    }
 });
 
 // Obtenemos el valor del parametro c_name
