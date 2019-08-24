@@ -65,11 +65,14 @@ function addRow() {
     //console.log("Adding row");
     idLastRow++;
     var markup = '<tr>\
-        <th scope="row">'+ idLastRow + '</th>\
+        <td scope="row">'+ idLastRow + '</td>\
         <td><input type="text" id="row-'+ idLastRow + '-title" name="row-' + idLastRow + '-title" placeholder="Title (optional)" value=""></td>\
         <td><input type="text" id="row-'+ idLastRow + '-addresses" class="address-textbox" name="row-' + idLastRow + '-addresses" placeholder="Start address" value=""></td>\
-        <td><input type="number" id="row-'+ idLastRow + '-srv" name="row-' + idLastRow + '-srv" placeholder="0" value=""></td>\
-        <td><input type="number" id="row-'+ idLastRow + '-size" name="row-' + idLastRow + '-size"value=""></td>';
+        <td><input type="number" min="0" max="24" id="row-'+ idLastRow + '-srv" name="row-' + idLastRow + '-srv" placeholder="0" value="0"></td>\
+        <td><input type="number" id="row-'+ idLastRow + '-bsize" name="row-' + idLastRow + '-bsize" value="0"></td>\
+        <td><input type="number" id="row-'+ idLastRow + '-dsize" name="row-' + idLastRow + '-dsize" value="0"></td>\
+        <td><input type="time" min="06:00" max="20:00" id="row-'+ idLastRow + '-fromtime" name="row-' + idLastRow + '-fromtime" placeholder="06:00" value="06:00"></td>\
+        <td><input type="time" min="06:00" max="20:00" id="row-'+ idLastRow + '-untiltime" name="row-' + idLastRow + '-untiltime" placeholder="20:00" value="20:00"></td>';
     $("#table-parameters").append(markup);
 }
 
@@ -82,7 +85,7 @@ function removeRow(targetId) {
 }
 
 // Send inputs data
-$('#nextTabButton').click(function (e) {
+function sendProblemData(dataMatrix, problemData) {
     // https://github.com/mapbox/mapbox-sdk-js/blob/master/docs/services.md#getmatrix
 
     // Vemos los puntos elegidos por el usuario en consola
@@ -115,14 +118,94 @@ $('#nextTabButton').click(function (e) {
                 headers: { "X-CSRFToken": getCookie("csrftoken") },
                 url: 'nodes-data',
                 data: {
-                    'distance_matrix': JSON.stringify(matrix.distances)
+                    'distance_matrix': JSON.stringify(matrix.distances),
+                    'matrix_data': JSON.stringify(dataMatrix),
+                    'problem_data': JSON.stringify(problemData)
                 },
                 success: function (response, data) {
                     console.log('Enviado correctamente: ' + response);
                 }
             });
         });
+}
+
+// tab panes
+
+$('#nextTabButton').click(function (e) {
+    var tabPaneSelected = getTabPaneSelected();
+
+    if (tabPaneSelected == "ADDRESSES") {
+        $("#tabs-sections a[href='#goals']").click();
+    } else if (tabPaneSelected == "GOALS") {
+        // CHeck possible problems
+        if (filledAdresses < 2) {
+            console.error('Error: need fill three or more rows..');
+        } else {
+            var dataMatrix = getDataMatrix();
+            var problemData = getProblemData();
+
+            //console.log(dataMatrix);
+            //console.log(problemData);
+            // Obtener parámetros y creamos el problema
+            sendProblemData(dataMatrix, problemData);
+        }
+    } else {
+        $('#nextTabButton').text('Get Route');
+    }
 });
+
+function getTabPaneSelected() {
+    var tabPaneSelected = $("#tabs-sections a.active").text();
+
+    return tabPaneSelected;
+}
+
+function getDataMatrix() {
+    var dataMatrix = [];
+    var table = $("#table-parameters tbody tr");
+    var countRows = 0;
+
+    table.each(function (rowIndex, r) {
+        if (countRows++ < filledAdresses) {
+            var cols = [];
+
+            $(this).find('td').each(function (colIndex, c) {
+                var column = $(c);
+
+                if (colIndex != 1 && colIndex != 2) {
+                    if (column.children().length) {
+                        cols.push(column.find('input').val());
+                    }
+                    else {
+                        cols.push(column.text());
+                    }
+                }
+            });
+            if (cols.length) {
+                dataMatrix.push(cols);
+            }
+        }
+    });
+
+    return dataMatrix;
+
+}
+
+function getProblemData() {
+    var defaultServiceTime = $("#serviceTime").val();
+    var vehiclesCapacity = $("#vehiclesCapacity").val();
+    var availableVehicles = $("#availableVehicles").val();
+
+    var problemData = {
+        defaultServiceTime: defaultServiceTime,
+        vehiclesCapacity: vehiclesCapacity,
+        availableVehicles: availableVehicles
+    }
+
+    return problemData;
+}
+
+// end tabpanes
 
 // Obtenemos el valor del parametro c_name
 function getCookie(c_name) {

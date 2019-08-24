@@ -1,16 +1,5 @@
 /*******header********/
 
-.masthead {
-  /*height: 2.43rem;*/
-}
-
-.navbar-brand {
-  margin-right: 3rem;
-  font-size: 1.25rem;
-  padding-top: .3125rem;
-  padding-bottom: .3125rem;
-}
-
 /********main content*******/
 
 /* General */
@@ -48,6 +37,13 @@
   overflow-y: auto;
 }
 
+.fieldset-title {
+  border-bottom: 1px solid #3b8dab;
+  text-align: left;
+  font-size: 0.8rem;
+  margin: 5px 0px 10px 5px;
+}
+
 .buttons-content {
   margin-top: auto;
   border: 1px solid;
@@ -55,6 +51,11 @@
 
 .buttons-content ul {
   justify-content: space-between;
+}
+
+.user-savefile {
+  text-align: left;
+  padding: 5px;
 }
 
 /* Table of parameters*/
