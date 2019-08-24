@@ -105,6 +105,7 @@ function sendProblemData(dataMatrix, problemData) {
     });
 
     // Obtenemos mediante llamada a la API Mapbox la matriz de distancias entre los nodos elegidos
+
     mapboxClient.matrix.getMatrix(myPoints)
         .send()
         .then(response => {
@@ -151,6 +152,7 @@ $('#nextTabButton').click(function (e) {
         }
     } else {
         $('#nextTabButton').text('Get Route');
+
     }
 });
 
