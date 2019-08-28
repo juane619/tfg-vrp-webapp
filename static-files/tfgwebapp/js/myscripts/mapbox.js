@@ -34,7 +34,7 @@ if (navigator.geolocation) {
 /* ADD points and save coordinates */
 var distanceContainer = document.getElementById('pruebas-mapa');
 
-var geojsonPoints = {
+geojsonPoints = {
     "type": "FeatureCollection",
     "features": []
 }
@@ -61,13 +61,26 @@ map.on('load', function () {
     });
 
     map.on('click', function (e) {
+
+        if ($("#tabs-sections a[href='#addresses'].active").length == 0) {
+            $("#tabs-sections a[href='#addresses']").click();
+        }
         // get point features of selected area (point mouse)
         var pointFeatures = map.queryRenderedFeatures(e.point, { layers: ['node-points'] });
 
         if (pointFeatures.length) {
             console.log("-------> FEature clicked!" + pointFeatures[0].layer.paint['circle-radius'])
-            pointFeatures[0].layer.paint['circle-radius'] = 25;
+            pointFeatures[0].layer.paint['circle-radius'] = 50;
             console.log("-------> FEature clicked!" + pointFeatures[0].layer.paint['circle-radius'])
+            map.getSource('geojsonPoints').setData(geojsonPoints);
+            console.log(pointFeatures[0]);
+            console.log(geojsonPoints);
+
+            map.flyTo({
+                center: [
+                    geojsonPoints.features[pointFeatures[0].properties['table-position'] - 1].geometry.coordinates[0],
+                    geojsonPoints.features[pointFeatures[0].properties['table-position'] - 1].geometry.coordinates[1]]
+            });
         } else {
             mapboxClient.geocoding.reverseGeocode({
                 query: [e.lngLat.lng, e.lngLat.lat],
@@ -104,17 +117,20 @@ map.on('load', function () {
                     }
                 });
         }
-
-
     });
 
     // Create a popup, but don't add it to the map yet.
-    var popup = new mapboxgl.Popup({
+    popup = new mapboxgl.Popup({
         closeButton: false,
         closeOnClick: false
     });
 
-    // When a click event occurs on a feature in the places layer, open a popup at the
+    popup2 = new mapboxgl.Popup({
+        closeButton: true,
+        closeOnClick: true
+    });
+
+    // When a mouse enter event occurs on a feature in the places layer, open a popup at the
     // location of the feature, with description HTML from its properties.
     map.on('mouseenter', 'node-points', function (e) {
         var coordinates = e.features[0].geometry.coordinates.slice();
@@ -131,14 +147,36 @@ map.on('load', function () {
             .setHTML("table-position: " + tablePosition)
             .addTo(map);
 
+        $('.selected').removeClass('selected');
         $('#table-parameters > tbody > tr:nth-child(' + tablePosition + ')').addClass("selected");
-
     });
 
     map.on('mouseleave', 'node-points', function () {
         map.getCanvas().style.cursor = '';
         popup.remove();
         $('#table-parameters > tbody .selected').removeClass("selected");
+    });
+
+    // When a mouse enter event occurs on a feature in the places layer, open a popup at the
+    // location of the feature, with description HTML from its properties.
+    map.on('contextmenu', 'node-points', function (e) {
+        var coordinates = e.features[0].geometry.coordinates.slice();
+        var tablePosition = e.features[0].properties['table-position'];
+
+        // Ensure that if the map is zoomed out such that multiple
+        // copies of the feature are visible, the popup appears
+        // over the copy being pointed to.
+        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+        }
+
+        coordinates_aux = [coordinates[0], coordinates[1] - 0.01];
+        popup2.setLngLat(coordinates_aux)
+            .setHTML("<div class='context-menu-item' id='delete-point" + tablePosition + "' style='cursor: pointer; white-space: nowrap;'>Delete</div>")
+            .addTo(map);
+
+        //$('.selected').removeClass('selected');
+        //$('#table-parameters > tbody > tr:nth-child(' + tablePosition + ')').addClass("selected");
     });
 
     map.on('mousemove', function (e) {

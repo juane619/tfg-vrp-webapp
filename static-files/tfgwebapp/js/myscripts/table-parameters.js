@@ -35,9 +35,21 @@ $(document).on('focus click', '#left-plan', function (e) {
     }
 });
 
-$("#table-parameters tr").click(function () {
+$("#table-parameters").on('click', '.row_node', function () {
     $('.selected').removeClass('selected');
     $(this).addClass("selected");
+
+    //console.log(geojsonPoints.features[$(this).index()].geometry.coordinates);
+
+    popup.setLngLat(geojsonPoints.features[$(this).index()].geometry.coordinates)
+        .setHTML("table-position: " + ($(this).index() + 1))
+        .addTo(map);
+
+    map.flyTo({
+        center: [
+            geojsonPoints.features[$(this).index()].geometry.coordinates[0],
+            geojsonPoints.features[$(this).index()].geometry.coordinates[1]]
+    });
 });
 
 function countFilledAddresses(current, last, targetId) {
@@ -64,7 +76,7 @@ function countFilledAddresses(current, last, targetId) {
 function addRow() {
     //console.log("Adding row");
     idLastRow++;
-    var markup = '<tr>\
+    var markup = '<tr class="row_node">\
         <td scope="row">'+ idLastRow + '</td>\
         <td><input type="text" id="row-'+ idLastRow + '-title" name="row-' + idLastRow + '-title" placeholder="Title (optional)" value=""></td>\
         <td><input type="text" id="row-'+ idLastRow + '-addresses" class="address-textbox" name="row-' + idLastRow + '-addresses" placeholder="Start address" value=""></td>\
@@ -73,7 +85,7 @@ function addRow() {
         <td><input type="number" id="row-'+ idLastRow + '-dsize" name="row-' + idLastRow + '-dsize" value="0"></td>\
         <td><input type="time" min="06:00" max="20:00" id="row-'+ idLastRow + '-fromtime" name="row-' + idLastRow + '-fromtime" placeholder="06:00" value="06:00"></td>\
         <td><input type="time" min="06:00" max="20:00" id="row-'+ idLastRow + '-untiltime" name="row-' + idLastRow + '-untiltime" placeholder="20:00" value="20:00"></td>';
-    $("#table-parameters").append(markup);
+    $("#table-parameters tbody").append(markup);
 }
 
 function removeRow(targetId) {
@@ -86,10 +98,11 @@ function removeRow(targetId) {
 
 // Send inputs data
 function sendProblemData(dataMatrix, problemData) {
+    var errors = [];
     // https://github.com/mapbox/mapbox-sdk-js/blob/master/docs/services.md#getmatrix
 
     // Vemos los puntos elegidos por el usuario en consola
-    console.log(geojsonPoints);
+    //console.log(geojsonPoints);
 
     // Creamos el objeto myPoints que representa los nodos elegidos por el usuario
     var myPoints = {
@@ -123,24 +136,55 @@ function sendProblemData(dataMatrix, problemData) {
                     'matrix_data': JSON.stringify(dataMatrix),
                     'problem_data': JSON.stringify(problemData)
                 },
-                success: function (response, data) {
-                    console.log('Enviado correctamente: ' + response);
+                success: function (response) {
+                    $("div.messagelist").removeClass("alert-danger");
+                    $("div.messagelist").removeClass("alert-warning");
+                    $("div.messagelist").addClass("alert-success");
+                    $("div.messagelist").text("Algorithm executed correctly..");
+                    $("div.user-savefile").removeClass('d-none');
+
+                },
+                error: function (thrownError) {
+                    $("div.messagelist").removeClass("alert-warning");
+                    $("div.messagelist").addClass("alert-danger");
+                    $("div.messagelist").text("Algorithm executed incorrectly..");
+                    $("div.user-savefile").addClass('d-none');
                 }
             });
         });
 }
 
 // tab panes
+$("#tabs-sections a[href='#addresses'], #tabs-sections a[href='#goals'], #tabs-sections a[href='#results']").click(function (e) {
+    var tabPaneSelected = $(this).text();
 
+    if (tabPaneSelected == "ADDRESSES") {
+        $('#nextTabButton').parent().show();
+        $('#nextTabButton').text('Next');
+    } else if (tabPaneSelected == "GOALS") {
+        $('#nextTabButton').parent().show();
+        $('#nextTabButton').text('Get Route!');
+    } else {
+        $('#nextTabButton').parent().hide();
+    }
+
+});
+
+
+// Next button control to solve the problem
 $('#nextTabButton').click(function (e) {
     var tabPaneSelected = getTabPaneSelected();
 
     if (tabPaneSelected == "ADDRESSES") {
-        $("#tabs-sections a[href='#goals']").click();
+        if (filledAdresses < 3) {
+            alert('Error: need fill three or more rows..');
+        } else {
+            $("#tabs-sections a[href='#goals']").click();
+        }
     } else if (tabPaneSelected == "GOALS") {
-        // CHeck possible problems
-        if (filledAdresses < 2) {
-            console.error('Error: need fill three or more rows..');
+        if (filledAdresses < 3) {
+            alert('Error: need fill three or more rows..');
+            $("#tabs-sections a[href='#addresses']").click();
         } else {
             var dataMatrix = getDataMatrix();
             var problemData = getProblemData();
@@ -149,9 +193,9 @@ $('#nextTabButton').click(function (e) {
             //console.log(problemData);
             // Obtener parámetros y creamos el problema
             sendProblemData(dataMatrix, problemData);
+            $("#tabs-sections a[href='#results']").click();
         }
     } else {
-        $('#nextTabButton').text('Get Route');
 
     }
 });
@@ -206,6 +250,61 @@ function getProblemData() {
 
     return problemData;
 }
+
+// save problem button BD
+
+$("#save-problem").on('click', function (e) {
+    $.ajax({
+        type: "POST",
+        headers: { "X-CSRFToken": getCookie("csrftoken") },
+        url: 'save-problem',
+        data: {
+
+        },
+        success: function (response) {
+            $('.messagelist').empty();
+            $("div.messagelist").removeClass("alert-warning");
+            $("div.messagelist").removeClass("alert-success");
+            if (response === 'already') {
+                $('.messagelist').append("<div class='message alert-warning'>Problem has been already saved!</div>");
+            } else {
+                $('.messagelist').append("<div class='message alert-success'>Problem saved!</div>");
+            }
+        },
+        error: function () {
+            $('.messagelist').empty();
+            $('.messagelist').append("<div class='message alert-danger'>Problem NOT saved!</div>");
+        }
+    });
+})
+
+
+// save problem button file
+
+$("#export-problem").on('click', function (e) {
+    $.ajax({
+        type: "POST",
+        headers: { "X-CSRFToken": getCookie("csrftoken") },
+        url: 'export-problem',
+        data: {
+
+        },
+        success: function (response) {
+            $('.messagelist').empty();
+            $("div.messagelist").removeClass("alert-warning");
+            $("div.messagelist").removeClass("alert-success");
+            if (response === 'already') {
+                $('.messagelist').append("<div class='message alert-warning'>Problem has been already exported!</div>");
+            } else {
+                $('.messagelist').append("<div class='message alert-success'>Problem exported!</div>");
+            }
+        },
+        error: function () {
+            $('.messagelist').empty();
+            $('.messagelist').append("<div class='message alert-danger'>Problem NOT exported!</div>");
+        }
+    });
+})
 
 // end tabpanes
 

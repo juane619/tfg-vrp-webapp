@@ -53,9 +53,37 @@
   justify-content: space-between;
 }
 
+.user-loadfile {
+  text-align: left;
+  padding: 5px;
+}
+
 .user-savefile {
   text-align: left;
   padding: 5px;
+}
+
+.file-buttons {
+  margin-right: auto;
+  cursor: pointer;
+}
+
+.import-file span {
+  cursor: pointer;
+}
+
+.import-file a {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.import-file a+input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  cursor: pointer;
 }
 
 /* Table of parameters*/
