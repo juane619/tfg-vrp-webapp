@@ -123,35 +123,73 @@ function sendProblemData(dataMatrix, problemData) {
         .send()
         .then(response => {
             const matrix = response.body; //MAtriz de distancias
-            console.log(matrix);
+            //console.log(matrix);
 
-            // Una vez tenemos la matriz de distancias, la enviamos al servidor para crear el archivo de entrada al algoritmo
+            // Una vez tenemos la matriz de distancias, enviamos al server la matriz de distancias, de parametros y los parametros del problema al server
+            // para crear el archivo de entrada al algoritmo
             // (enviamos csrf token de seguridad obtenida de la cookie)
             $.ajax({
                 type: "POST",
                 headers: { "X-CSRFToken": getCookie("csrftoken") },
                 url: 'nodes-data',
+                dataType: "json",
                 data: {
                     'distance_matrix': JSON.stringify(matrix.distances),
                     'matrix_data': JSON.stringify(dataMatrix),
                     'problem_data': JSON.stringify(problemData)
                 },
                 success: function (response) {
-                    $("div.messagelist").removeClass("alert-danger");
-                    $("div.messagelist").removeClass("alert-warning");
-                    $("div.messagelist").addClass("alert-success");
-                    $("div.messagelist").text("Algorithm executed correctly..");
-                    $("div.user-savefile").removeClass('d-none');
-
+                    //console.log(response);
+                    var routesMatrix = response.routesMatrix;
+                    manageMatrixRoutes(routesMatrix);
                 },
                 error: function (thrownError) {
-                    $("div.messagelist").removeClass("alert-warning");
-                    $("div.messagelist").addClass("alert-danger");
-                    $("div.messagelist").text("Algorithm executed incorrectly..");
-                    $("div.user-savefile").addClass('d-none');
+                    manageMatrixRoutes(undefined);
                 }
             });
         });
+}
+
+/* Manage matrix routes */
+
+function manageMatrixRoutes(routesMatrix) {
+    // clear format
+    $("div#messagelist").removeClass("alert-danger");
+    $("div#messagelist").removeClass("alert-warning");
+    $("div#messagelist").removeClass("alert-success");
+    $("div#messagelist").text("");
+
+    if (routesMatrix) {
+        if (routesMatrix.length == 0) {
+            $("div#messagelist").addClass("alert-warning");
+            $("div#messagelist").text("Not routes obtained..");
+        } else {
+            // add rows to table and send to Mapbox API
+
+            $("#table-routes tbody").empty();
+            for (i = 0; i < routesMatrix.length; i++) {
+                var markup = '\
+                    <tr>\
+                        <th scope="row"><a onclick="$(\'#tabs-sections-routes a[href=\'#route'+ (i + 1) + '\']\').click();" href="#route' + (i + 1) + '">Route #' + (i + 1) + '</a></th>\
+                        <td>' + (routesMatrix[i].length - 2) + ' clients</td>\
+                        <td>0:07</td>\
+                        <td>1.01 miles</td>\
+                        <td><input type="button" value="Zoom" class="zoomButton" title="Center the map on this route"></td>\
+                    </tr>';
+
+                $("#table-routes tbody").append(markup);
+
+                // add tabs (TO DO)
+                $("#tabs-sections-routes ul li[href='#summary']").sib
+            }
+
+
+
+        }
+    } else {
+        $("div#messagelist").addClass("alert-danger");
+        $("#messagelist").text("Algorithms fails....");
+    }
 }
 
 // tab panes
@@ -170,7 +208,6 @@ $("#tabs-sections a[href='#addresses'], #tabs-sections a[href='#goals'], #tabs-s
 
 });
 
-
 // Next button control to solve the problem
 $('#nextTabButton').click(function (e) {
     var tabPaneSelected = getTabPaneSelected();
@@ -186,12 +223,10 @@ $('#nextTabButton').click(function (e) {
             alert('Error: need fill three or more rows..');
             $("#tabs-sections a[href='#addresses']").click();
         } else {
+            // Get parameters and send to server to execute algorithm
             var dataMatrix = getDataMatrix();
             var problemData = getProblemData();
 
-            //console.log(dataMatrix);
-            //console.log(problemData);
-            // Obtener parámetros y creamos el problema
             sendProblemData(dataMatrix, problemData);
             $("#tabs-sections a[href='#results']").click();
         }
