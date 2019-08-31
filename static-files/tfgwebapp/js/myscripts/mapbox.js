@@ -34,6 +34,7 @@ if (navigator.geolocation) {
 /* ADD points and save coordinates */
 var distanceContainer = document.getElementById('pruebas-mapa');
 
+// GeoJSON feature collection of locations
 geojsonPoints = {
     "type": "FeatureCollection",
     "features": []
@@ -65,6 +66,12 @@ map.on('load', function () {
         if ($("#tabs-sections a[href='#addresses'].active").length == 0) {
             $("#tabs-sections a[href='#addresses']").click();
         }
+        // add wharehouse location
+        if (geojsonPoints.features.length == 0) {
+            whareHouseLocation = [e.lngLat.lat, e.lngLat.lng];
+            warehouse = turf.featureCollection([turf.point(whareHouseLocation)]);
+        }
+
         // get point features of selected area (point mouse)
         var pointFeatures = map.queryRenderedFeatures(e.point, { layers: ['node-points'] });
 
@@ -102,7 +109,8 @@ map.on('load', function () {
                             "properties": {
                                 "id": String(new Date().getTime()),
                                 "direction": match.features[0].place_name,
-                                "table-position": filledAdresses + 1
+                                "table-position": filledAdresses + 1,
+                                "orderTime": Date.now()
                             }
                         };
 

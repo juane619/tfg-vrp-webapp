@@ -161,16 +161,28 @@ function manageMatrixRoutes(routesMatrix) {
 
     if (routesMatrix) {
         if (routesMatrix.length == 0) {
+            $("#message-save").addClass("d-none");
             $("div#messagelist").addClass("alert-warning");
             $("div#messagelist").text("Not routes obtained..");
         } else {
-            // add rows to table and send to Mapbox API
+            $("#message-save").removeClass("d-none");
+            // 1. send to Mapbox API AND 2. MODIFY TABLE PARAMETERS
 
+
+            // 2. MODIFY TABLE PARAMETERS
+            // reset routes table and routes tabs
             $("#table-routes tbody").empty();
-            for (i = 0; i < routesMatrix.length; i++) {
+            $("#tabs-routes ul li a[href='#summary']").parent().siblings().empty(); //delete tabs of routes
+
+            for (var i = 0; i < routesMatrix.length; i++) {
+                var randomColor = getRandomColor();
+
+                // 1. PRINT ROUTES IN MAP
+                routesMatrixData = sendRoutesMatrixToMapboxAPI(routesMatrix[i], randomColor, i);
+
                 var markup = '\
-                    <tr>\
-                        <th scope="row"><a onclick="$(\'#tabs-sections-routes a[href=\'#route'+ (i + 1) + '\']\').click();" href="#route' + (i + 1) + '">Route #' + (i + 1) + '</a></th>\
+                    <tr style="background-color: '+ randomColor + '">\
+                        <th scope="row"><a href="#route'+ (i + 1) + '">Route #' + (i + 1) + '</a></th>\
                         <td>' + (routesMatrix[i].length - 2) + ' clients</td>\
                         <td>0:07</td>\
                         <td>1.01 miles</td>\
@@ -179,16 +191,222 @@ function manageMatrixRoutes(routesMatrix) {
 
                 $("#table-routes tbody").append(markup);
 
-                // add tabs (TO DO)
-                $("#tabs-sections-routes ul li[href='#summary']").sib
+                $("#table-routes tbody a[href='#route" + (i + 1) + "']").click(function (e) {
+                    var href = $(this).attr("href");
+                    $("#tabs-routes a[href='" + href + "']").click();
+                })
+
+                // route tabs
+
+                // add tab and related route nodes
+                addRouteNodes(i + 1, routesMatrix[i], randomColor);
+
+
             }
-
-
-
         }
     } else {
         $("div#messagelist").addClass("alert-danger");
         $("#messagelist").text("Algorithms fails....");
+    }
+}
+
+function sendRoutesMatrixToMapboxAPI(route, randomColor, id) {
+    if (route.length) {
+        truckLocation = [geojsonPoints.features[route[0]].geometry.coordinates];
+        warehouseLocation = [geojsonPoints.features[route[0]].geometry.coordinates];
+        lastQueryTime = 0;
+        lastAtRestaurant = 0;
+        keepTrack = [];
+        currentSchedule = [];
+        currentRoute = null;
+        pointHopper = {};
+        pause = true;
+        speedFactor = 50;
+
+        for (var i = 0; i < route.length - 1; i++) {
+            var pt = geojsonPoints.features[route[i] - 1];
+            if (pt) {
+                pointHopper[pt.properties.id] = pt;
+            }
+
+        }
+
+        var nothing = turf.featureCollection([]);
+
+        map.addSource('route' + id, {
+            type: 'geojson',
+            data: nothing
+        });
+
+        map.addLayer({
+            id: 'routearrows' + id,
+            type: 'symbol',
+            source: 'route' + id,
+            layout: {
+                'symbol-placement': 'line',
+                'text-field': '▶',
+                'text-size': [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    12, 24,
+                    22, 60
+                ],
+                'symbol-spacing': [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    12, 30,
+                    22, 160
+                ],
+                'text-keep-upright': false
+            },
+            paint: {
+                'text-color': randomColor,
+                'text-halo-color': 'hsl(55, 11%, 96%)',
+                'text-halo-width': 3
+            }
+        }, 'waterway-label');
+
+        map.addLayer({
+            id: 'routeline-active' + id,
+            type: 'line',
+            source: 'route' + id,
+            layout: {
+                'line-join': 'round',
+                'line-cap': 'round'
+            },
+            paint: {
+                'line-color': randomColor,
+                'line-width': [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    12, 3,
+                    22, 12
+                ]
+            }
+        }, 'waterway-label');
+
+        // Make a request to the Optimization API
+        $.ajax({
+            method: 'GET',
+            url: assembleQueryURL(),
+        }).done(function (data) {
+            // Create a GeoJSON feature collection
+            var routeGeoJSON = turf.featureCollection([turf.feature(data.trips[0].geometry)]);
+
+            // If there is no route provided, reset
+            if (!data.trips[0]) {
+                routeGeoJSON = nothing;
+            } else {
+                // Update the `route` source by getting the route source
+                // and setting the data equal to routeGeoJSON
+                map.getSource('route' + id)
+                    .setData(routeGeoJSON);
+            }
+
+            if (data.waypoints.length === 12) {
+                window.alert('Maximum number of points reached. Read more at docs.mapbox.com/api/navigation/#optimization.');
+            }
+        });
+    }
+}
+
+// Aux functions to send request to MAPBOX API
+// Here you'll specify all the parameters necessary for requesting a response from the Optimization API
+function assembleQueryURL() {
+
+    // Store the location of the truck in a variable called coordinates
+    var coordinates = [truckLocation];
+    var distributions = [];
+    keepTrack = [truckLocation];
+
+    // Create an array of GeoJSON feature collections for each point
+    var restJobs = objectToArray(pointHopper);
+
+    // If there are any orders from this restaurant
+    if (restJobs.length > 0) {
+
+        // Check to see if the request was made after visiting the restaurant
+        /* var needToPickUp = restJobs.filter(function (d, i) {
+            return d.properties.orderTime > lastAtRestaurant;
+        }).length > 0; */
+        var needToPickUp = false;
+
+        // If the request was made after picking up from the restaurant,
+        // Add the restaurant as an additional stop
+        if (needToPickUp) {
+            var restaurantIndex = coordinates.length;
+            // Add the restaurant as a coordinate
+            coordinates.push(warehouseLocation);
+            // push the restaurant itself into the array
+            keepTrack.push(pointHopper.warehouse);
+        }
+
+        restJobs.forEach(function (d, i) {
+            // Add dropoff to list
+            keepTrack.push(d);
+            coordinates.push(d.geometry.coordinates);
+            // if order not yet picked up, add a reroute
+            if (needToPickUp && d.properties.orderTime > lastAtRestaurant) {
+                //distributions.push(restaurantIndex + ',' + (coordinates.length - 1));
+            }
+        });
+    }
+
+    // Set the profile to `driving`
+    // Coordinates will include the current location of the truck,
+    return 'https://api.mapbox.com/optimized-trips/v1/mapbox/driving/' + coordinates.join(';') + '?distributions=' + distributions.join(';') + '&overview=full&steps=true&geometries=geojson&source=first&access_token=' + mapboxgl.accessToken;
+}
+
+function objectToArray(obj) {
+    var keys = Object.keys(obj);
+    var routeGeoJSON = keys.map(function (key) {
+        return obj[key];
+    });
+    return routeGeoJSON;
+}
+
+// Get random color
+function getRandomColor() {
+    var letters = '0123456789ABCDEF';
+    var color = '#';
+    for (var i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
+
+// add route tab depends of number of route and list of nodes route
+function addRouteNodes(routeId, nodesList, randomColor) {
+    var routeTab = '\
+        <li class="nav-item" title="" style="background-color: '+ randomColor + '">\
+            <a class="nav-link route-tab" data-toggle="tab" href="#route'+ routeId + '">Route ' + routeId + '</a>\
+        </li>';
+
+    $("#tabs-routes ul").append(routeTab);
+
+    var routeDivContent = '<div id="route' + routeId + '" class="tab-pane fade"></div>';
+    $("#routes-tab-content").append(routeDivContent);
+
+    var routeTabContent = $("#table-nodesRoute").clone();
+    routeTabContent.attr("id", "table-nodesRoute" + routeId);
+    routeTabContent.removeClass("d-none");
+
+    $("#route" + routeId).append(routeTabContent);
+
+    for (j = 0; j < nodesList.length; j++) {
+        var row = '\
+                    <tr>\
+                        <th scope="row">'+ (j + 1) + '</th>\
+                        <td>Address ' + nodesList[j] + '</td>\
+                        <td>0:07</td>\
+                        <td>1.01 miles</td>\
+                        <td>34</td>\
+                    </tr>';
+
+        $("#route" + routeId + " #table-nodesRoute" + routeId + " tbody").append(row);
     }
 }
 
@@ -298,17 +516,17 @@ $("#save-problem").on('click', function (e) {
         },
         success: function (response) {
             $('.messagelist').empty();
-            $("div.messagelist").removeClass("alert-warning");
-            $("div.messagelist").removeClass("alert-success");
+            $("div#message-save").removeClass("alert-warning");
+            $("div#message-save").removeClass("alert-success");
             if (response === 'already') {
-                $('.messagelist').append("<div class='message alert-warning'>Problem has been already saved!</div>");
+                $('#message-save').append("<div class='message alert-warning'>Problem has been already saved!</div>");
             } else {
-                $('.messagelist').append("<div class='message alert-success'>Problem saved!</div>");
+                $('#message-save').append("<div class='message alert-success'>Problem saved!</div>");
             }
         },
         error: function () {
-            $('.messagelist').empty();
-            $('.messagelist').append("<div class='message alert-danger'>Problem NOT saved!</div>");
+            $('#message-save').empty();
+            $('#message-save').append("<div class='message alert-danger'>Problem NOT saved!</div>");
         }
     });
 })
@@ -325,7 +543,8 @@ $("#export-problem").on('click', function (e) {
 
         },
         success: function (response) {
-            $('.messagelist').empty();
+
+            $('#message-save').empty();
             $("div.messagelist").removeClass("alert-warning");
             $("div.messagelist").removeClass("alert-success");
             if (response === 'already') {
