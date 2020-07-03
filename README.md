@@ -1,12 +1,8 @@
-<<<<<<< HEAD
-Docker Django
-=============
 
-## tl;dr
-```bash
-$ git clone git@github.com:erroneousboat/docker-django.git
-$ docker-compose up
-```
+Docker Django
+
+Web app applying LKH3 alghorithm to resolve VRP problem.
+Web app based on Django to find the best route for N vehicles using LKH-3 algorithm.
 
 Now you can access the application at <https://localhost> and the admin site
 at <https://localhost/admin>.
@@ -189,8 +185,3 @@ A: Remember to restart uWSGI for the changes to take effect.
 # Find container_name by using docker-compose ps
 $ docker exec [container_name] touch /etc/uwsgi/reload-uwsgi.ini
 ```
-=======
-Web app applying LKH3 alghorithm to resolve VRP problem.
-
-Web app based on Django to find the best route for N vehicles using LKH-3 algorithm.
->>>>>>> a1af8a8c36a57744664e91dff30f839602c0a082
