@@ -1,4 +1,4 @@
-django==2.2.13
+django==2.2.21
 django-crispy-forms>=1.7.2 # Use pip install -e ../django-crispy-forms for local dev
 uwsgi==2.0.17.1
 psycopg2-binary
